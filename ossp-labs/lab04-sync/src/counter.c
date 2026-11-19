@@ -1,5 +1,4 @@
-/* Usage: counter.exe [--mode mutex|atomic|none] [--procs N] [--ops K] [--runs R]
- *               [--timeout MS] [--csv FILE] [--check] [--quiet]
+/* Usage: counter.exe [--mode mutex|atomic|none] [--procs N] [--ops K] [--runs R] [--timeout MS] [--csv FILE] [--check] [--quiet]
  * Код возврата: 0 - успех, 1 - нарушения в режимах mutex/atomic, 2 - ошибка аргументов, 3 - системная ошибка.
  */
 #define _CRT_SECURE_NO_WARNINGS
@@ -163,7 +162,6 @@ static int run_once(const Config *c, int run, Result *r)
     }
     r->final_value = sh->counter;
 
-    /* после завершения никто не удерживает мьютекс и никто не в критической секции */
     if (c->mode == MODE_MUTEX) {
         DWORD m = WaitForSingleObject(hMutex, 0);
         if (m == WAIT_OBJECT_0) ReleaseMutex(hMutex); else extra_viol++;
