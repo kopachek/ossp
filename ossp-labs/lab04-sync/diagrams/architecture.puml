@@ -1,0 +1,30 @@
+@startuml
+title Вариант 23: общий счетчик
+participant "Координатор\n(counter.exe)" as C
+participant "Разделяемая память\n(FileMapping)" as M
+participant "Mutex / Semaphore / Event\n(именованные)" as S
+participant "Worker 0..N-1\n(counter.exe --worker)" as W
+
+C -> M : CreateFileMapping + MapViewOfFile
+C -> S : CreateMutex, CreateSemaphore(ready), CreateEvent(start)
+C -> W : CreateProcess x N (имя объектов в аргументах)
+W -> M : OpenFileMapping + MapViewOfFile
+W -> S : OpenMutex / OpenSemaphore / OpenEvent
+W -> S : ReleaseSemaphore(ready)
+C -> S : WaitForSingleObject(ready) x N
+C -> S : SetEvent(start)  [старт замера]
+loop ops раз
+  alt mode = mutex
+    W -> S : WaitForSingleObject(mutex)
+    W -> M : counter = counter + 1
+    W -> S : ReleaseMutex
+  else mode = atomic
+    W -> M : InterlockedIncrement(counter)
+  else mode = none
+    W -> M : counter++ (гонка)
+  end
+end
+W --> C : завершение процесса (код выхода)
+C -> C : WaitForMultipleObjects(процессы) [конец замера]
+C -> M : проверка counter == N*ops, инварианты
+@enduml
